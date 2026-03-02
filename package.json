@@ -1,20 +1,21 @@
 {
-  "name": "newtube-backend",
-  "version": "0.0.0",
+  "name": "newtube-store",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "test": "vitest",
-    "cf-typegen": "wrangler types",
-    "postdeploy": "wrangler d1 execute DB --file=schema.sql --remote"
-  },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.19",
-    "@cloudflare/workers-types": "^4.20250430.0",
-    "typescript": "^5.5.2",
-    "vitest": "~3.0.7",
-    "wrangler": "^4.14.0"
+    "dev:frontend": "bun run dev --workspace=frontend",
+    "dev:backend": "bun run dev --workspace=backend",
+    "build:frontend": "bun run build --workspace=frontend",
+    "build:backend": "bun run build --workspace=backend",
+    "check:frontend": "bun run check --workspace=frontend",
+    "check:backend": "bun run check --workspace=backend",
+    "test:frontend": "bun run test --workspace=frontend",
+    "test:backend": "bun run test --workspace=backend",
+    "deploy:frontend": "bun run deploy --workspace=frontend",
+    "deploy:backend": "bun run deploy --workspace=backend"
   }
 }
