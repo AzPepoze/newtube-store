@@ -47,7 +47,7 @@ export default {
           .bind(googleUser.id, googleUser.email, googleUser.name, googleUser.picture)
           .run();
 
-        const frontendUrl = url.origin.replace(':8787', ':5173');
+        const frontendUrl = env.FRONTEND_URL || 'http://localhost:5173';
         return new Response(null, {
           status: 302,
           headers: {

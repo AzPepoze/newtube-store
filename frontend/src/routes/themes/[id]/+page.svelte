@@ -4,6 +4,9 @@
 	import type { Theme } from "$lib/types";
 	import { fade, fly } from "svelte/transition";
 	import { env } from "$env/dynamic/public";
+	import { getUserId } from "$lib/auth";
+	import EditIcon from "$lib/icons/EditIcon.svelte";
+	import TrashIcon from "$lib/icons/TrashIcon.svelte";
 
 	interface ThemeDetail extends Theme {
 		creator_name?: string;
@@ -14,10 +17,12 @@
 	let loading = $state(true);
 	let activeSlide = $state(0);
 	let activeTab = $state("overview");
+	let currentUser = $state("");
 
 	const PUBLIC_API_URL = env.PUBLIC_API_URL || "http://localhost:8787";
 
 	async function fetchTheme() {
+		currentUser = getUserId() || "";
 		const id = page.params.id;
 		loading = true;
 		try {
@@ -56,6 +61,22 @@
 	function nextSlide() {
 		if (theme && theme.images.length > 0) {
 			activeSlide = (activeSlide + 1) % theme.images.length;
+		}
+	}
+
+	async function deleteTheme() {
+		if (!theme || !confirm("Are you sure you want to delete this theme?"))
+			return;
+		try {
+			const res = await fetch(
+				`${PUBLIC_API_URL}/api/themes/${theme.id}`,
+				{ method: "DELETE" },
+			);
+			if (res.ok) window.location.href = "/store";
+			else alert("Failed to delete theme");
+		} catch (e) {
+			console.error("Error deleting theme:", e);
+			alert("Failed to delete theme");
 		}
 	}
 
@@ -149,7 +170,25 @@
 					<!-- Title + Install -->
 					<div class="title-row">
 						<h1 class="premium-font">{theme.name}</h1>
-						<button class="install-btn">Install Theme</button>
+						<div class="actions-group">
+							{#if currentUser === theme.owner_id}
+								<a
+									href="/themes/edit/{theme.id}"
+									class="icon-action-btn edit"
+									title="Edit Theme"
+								>
+									<EditIcon size={18} />
+								</a>
+								<button
+									class="icon-action-btn delete"
+									title="Delete Theme"
+									onclick={deleteTheme}
+								>
+									<TrashIcon size={18} />
+								</button>
+							{/if}
+							<button class="install-btn">Install Theme</button>
+						</div>
 					</div>
 
 					<!-- Stats -->
@@ -420,12 +459,47 @@
 			line-height: 1.1;
 		}
 
+		.actions-group {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+
+			.icon-action-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 40px;
+				height: 40px;
+				border-radius: $radius-sm;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid var(--border-glass);
+				color: var(--text-secondary);
+				cursor: pointer;
+				transition: all 0.2s;
+
+				&:hover {
+					background: rgba(255, 255, 255, 0.1);
+					color: var(--text-primary);
+				}
+
+				&.edit:hover {
+					color: $primary-glow;
+					border-color: rgba($primary-glow, 0.3);
+				}
+
+				&.delete:hover {
+					color: #ff4d4d;
+					border-color: rgba(255, 77, 77, 0.3);
+					background: rgba(255, 77, 77, 0.1);
+				}
+			}
+		}
+
 		.install-btn {
 			@include premium-button;
 			background: linear-gradient(135deg, $primary-glow, $secondary-glow);
 			color: white;
 			white-space: nowrap;
-			flex-shrink: 0;
 		}
 	}
 
