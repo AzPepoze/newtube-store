@@ -2,10 +2,8 @@
 	import "../app.scss";
 	import { onMount } from "svelte";
 	import { fade } from "svelte/transition";
-	import { env } from "$env/dynamic/public";
 	import { getUserId, clearUserId } from "$lib/auth";
 	import UserIcon from "$lib/icons/UserIcon.svelte";
-	import SparkleIcon from "$lib/icons/SparkleIcon.svelte";
 	import LogoutIcon from "$lib/icons/LogoutIcon.svelte";
 	import SunIcon from "$lib/icons/SunIcon.svelte";
 	import MoonIcon from "$lib/icons/MoonIcon.svelte";
@@ -16,14 +14,13 @@
 	interface User {
 		id: string;
 		name: string;
-		avatar_url: string;
-		created_at: string;
+		avatarUrl: string;
+		createdAt: string;
 	}
 
-	const PUBLIC_API_URL = env.PUBLIC_API_URL || "http://localhost:8787";
+	import { PUBLIC_API_URL } from "$lib/constants";
 
 	let currentUser = $state<User | null>(null);
-	let dropdownOpen = $state(false);
 	let isLightMode = $state(false);
 
 	onMount(async () => {
@@ -65,7 +62,6 @@
 	function handleLogout() {
 		clearUserId();
 		currentUser = null;
-		dropdownOpen = false;
 		window.location.href = "/";
 	}
 </script>
@@ -83,7 +79,7 @@
 <div class="app-container">
 	<nav class="glass-panel">
 		<div class="nav-left">
-			<a href="/" class="logo-link">
+			<a href="/" class="logo-link" in:fade={{ duration: 200 }}>
 				<img src="/logo.png" alt="NewTube" class="logo-img" />
 			</a>
 			<div class="nav-links">
@@ -98,9 +94,9 @@
 				aria-label="Toggle theme"
 			>
 				{#if isLightMode}
-					<MoonIcon size={18} />
+					<MoonIcon size={22} />
 				{:else}
-					<SunIcon size={18} />
+					<SunIcon size={22} />
 				{/if}
 			</button>
 
@@ -113,9 +109,9 @@
 								aria-label="User menu"
 								onclick={toggle}
 							>
-								{#if currentUser?.avatar_url}
+								{#if currentUser?.avatarUrl}
 									<img
-										src={currentUser.avatar_url}
+										src={currentUser.avatarUrl}
 										alt={currentUser.name}
 										class="avatar"
 									/>
@@ -138,11 +134,6 @@
 									href: "/profile",
 								},
 								{
-									label: "Your Theme",
-									icon: SparkleIcon,
-									href: "/themes/create",
-								},
-								{
 									label: "Logout",
 									icon: LogoutIcon,
 									class: "logout-item",
@@ -153,7 +144,10 @@
 						/>
 					</div>
 				{:else}
-					<a href="/login" class="login-btn">Login</a>
+					<a
+						href="/login"
+						class="login-btn premium-button glass-panel">Login</a
+					>
 				{/if}
 			</div>
 		</div>
@@ -176,7 +170,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 1rem 2rem;
+		padding: 0.4rem 1.5rem;
 		margin-bottom: 3rem;
 		border-radius: var(--radius-md);
 		z-index: 1000;
@@ -194,14 +188,14 @@
 		.nav-right {
 			display: flex;
 			align-items: center;
-			gap: 2rem;
+			gap: 2.5rem;
 		}
 
 		.logo-img {
-			height: 32px;
+			height: 60px;
 			width: auto;
 			display: block;
-			filter: brightness(0) invert(1);
+			transition: filter 0.3s ease;
 
 			:global(.light) & {
 				filter: none;
@@ -213,7 +207,7 @@
 			gap: 1.5rem;
 
 			a {
-				font-size: 0.9rem;
+				font-size: 1.1rem;
 				font-weight: 600;
 				color: var(--text-secondary);
 				transition: color 0.2s;
@@ -249,10 +243,8 @@
 
 	.auth-section {
 		.login-btn {
-			@include premium-button;
-			@include glassmorphism;
-			padding: 8px 18px;
-			font-size: 0.85rem;
+			padding: 10px 22px;
+			font-size: 1rem;
 		}
 	}
 
@@ -264,9 +256,9 @@
 			border: none;
 			display: flex;
 			align-items: center;
-			gap: 0.75rem;
+			gap: 1rem;
 			cursor: pointer;
-			padding: 4px;
+			padding: 6px;
 			border-radius: var(--radius-lg);
 			transition: background 0.2s;
 
@@ -279,16 +271,16 @@
 			}
 
 			.avatar {
-				width: 32px;
-				height: 32px;
+				width: 40px;
+				height: 40px;
 				border-radius: 50%;
 				object-fit: cover;
 				border: 1px solid var(--border-glass);
 			}
 
 			.avatar-fallback {
-				width: 32px;
-				height: 32px;
+				width: 40px;
+				height: 40px;
 				border-radius: 50%;
 				background: var(--text-primary);
 				display: flex;
@@ -296,32 +288,14 @@
 				justify-content: center;
 				color: var(--bg-dark);
 				font-weight: 700;
-				font-size: 0.9rem;
+				font-size: 1.1rem;
 			}
 
 			.chevron {
 				font-size: 0.7rem;
 				color: var(--text-primary);
 				transition: transform 0.2s;
-
-				&.open {
-					transform: rotate(180deg);
-				}
 			}
-		}
-
-		.dropdown-header-item {
-			pointer-events: none;
-			border-bottom: 1px solid var(--border-glass);
-			margin-bottom: 0.5rem;
-			color: var(--text-primary) !important;
-			opacity: 1 !important;
-		}
-
-		.logout-item {
-			border-top: 1px solid var(--border-glass);
-			margin-top: 0.5rem;
-			padding-top: 1rem !important;
 		}
 	}
 
@@ -342,8 +316,7 @@
 	}
 
 	@media (max-width: 768px) {
-		.nav-links,
-		.nav-search {
+		.nav-links {
 			display: none;
 		}
 	}

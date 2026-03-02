@@ -1,13 +1,13 @@
 <script lang="ts">
-    import ThemeEditor from "$lib/components/ThemeEditor.svelte";
+	import ThemeEditor from "$lib/components/ThemeEditor.svelte";
 </script>
 
 <div class="page">
-    <ThemeEditor />
+	<ThemeEditor />
 </div>
 
 <style>
-    .page {
-        padding-top: 2rem;
-    }
+	.page {
+		padding-top: 2rem;
+	}
 </style>
