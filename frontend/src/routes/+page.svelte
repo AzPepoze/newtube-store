@@ -21,9 +21,8 @@
 					/>
 				</div>
 				<h1 class="premium-font">
-					Discover / Create Your <span class="glow glow-text"
-						>NewTube</span
-					> Experience
+					Discover / Create <br />
+					Your <span class="glow">NewTube</span> Experience
 				</h1>
 
 				<div class="cta-group">
@@ -53,10 +52,6 @@
 		justify-content: center;
 		text-align: center;
 
-		.hero-content {
-			max-width: 900px;
-		}
-
 		.hero-logo-container {
 			margin-bottom: 2.5rem;
 			display: flex;
@@ -77,7 +72,6 @@
 					rgba(255, 255, 255, 0.1) 0%,
 					transparent 70%
 				);
-				filter: blur(40px);
 				z-index: -1;
 
 				:global(.light) & {
@@ -93,7 +87,8 @@
 		.hero-logo {
 			height: 220px;
 			width: auto;
-			transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			transition: transform 0.3s
+				cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
 			&:hover {
 				transform: scale(1.05) rotate(2deg);
@@ -119,7 +114,7 @@
 		}
 
 		h1 {
-			font-size: 6rem;
+			font-size: 5rem;
 			line-height: 1;
 			margin-bottom: 2rem;
 			font-weight: 800;

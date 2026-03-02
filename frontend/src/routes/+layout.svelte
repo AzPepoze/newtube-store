@@ -32,7 +32,7 @@
 		const userId = getUserId();
 		if (!userId) return;
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/me`, {
+			const response = await fetch(`${PUBLIC_API_URL}/users/me`, {
 				credentials: "include",
 			});
 			if (response.ok) {

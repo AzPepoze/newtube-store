@@ -6,7 +6,7 @@
 	import { page } from "$app/state";
 	import SearchIcon from "$lib/icons/SearchIcon.svelte";
 	import CrossIcon from "$lib/icons/CrossIcon.svelte";
-
+	import { debounce } from "$lib/debounce";
 	import CustomDropdown from "$lib/components/CustomDropdown.svelte";
 
 	let themes = $state<Theme[]>([]);
@@ -47,8 +47,14 @@
 		fetchThemes();
 	});
 
+	const debouncedSearch = debounce(fetchThemes, 500);
+
 	$effect(() => {
 		if (sortBy) fetchThemes();
+	});
+
+	$effect(() => {
+		debouncedSearch();
 	});
 </script>
 
@@ -68,7 +74,6 @@
 						class="clear-search"
 						onclick={() => {
 							searchQuery = "";
-							fetchThemes();
 						}}
 					>
 						<CrossIcon size={14} />
@@ -104,7 +109,6 @@
 					class="clear-btn premium-button glass-panel"
 					onclick={() => {
 						searchQuery = "";
-						window.location.href = "/store";
 					}}
 				>
 					<CrossIcon size={16} /> Clear Search
@@ -228,7 +232,8 @@
 		.spinner {
 			width: 50px;
 			height: 50px;
-			border: 3px solid rgba(var(--text-primary-rgb, 255, 255, 255), 0.1);
+			border: 3px solid
+				rgba(var(--text-primary-rgb, 255, 255, 255), 0.1);
 			border-top-color: var(--primary-glow);
 			border-radius: 50%;
 			margin: 0 auto 1.5rem;

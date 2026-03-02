@@ -5,34 +5,47 @@
 	import EyeIcon from "$lib/icons/EyeIcon.svelte";
 	import { getUserId } from "$lib/auth";
 	import { PUBLIC_API_URL } from "$lib/constants";
+	import { compressImage } from "$lib/imageCompression";
 	import ThemeEditorBasicInfo from "$lib/components/ThemeEditorBasicInfo.svelte";
 	import ThemeEditorSettings from "$lib/components/ThemeEditorSettings.svelte";
 	import ThemeEditorPreview from "$lib/components/ThemeEditorPreview.svelte";
 	let props: { initialData?: Partial<Theme>; isEdit?: boolean } = $props();
 	let isEdit = $derived(props.isEdit ?? false);
-	let initialData = props.initialData;
+	let initialData = $derived(props.initialData);
 
 	let userId = getUserId();
-	let name = $state(initialData?.name || "");
-	let description = $state(initialData?.description || "");
-	let images = $state<string[]>(initialData?.images || []);
-	let settingsCode = $state(
-		JSON.stringify(
-			initialData?.settings || {
-				MainThemeColor: "#ffffff",
-				EnableBackground: true,
-				EnableAnimationsTransitions: true,
-			},
-			null,
-			2,
-		),
-	);
+	let name = $state("");
+	let description = $state("");
+	let images = $state<string[]>([]);
+	let coverImage = $state("");
+	let pendingImages = $state<File[]>([]);
+	let settingsCode = $state("");
 
 	let submitting = $state(false);
 	let success = $state(false);
 	let errorMessage = $state("");
 	let activeTab = $state<"info" | "settings" | "preview">("info");
 	let jsonError = $state("");
+
+	// Initialize form with provided data
+	$effect(() => {
+		if (initialData) {
+			name = initialData.name || "";
+			description = initialData.description || "";
+			images = initialData.images || [];
+			coverImage = initialData.coverImage || "";
+			settingsCode = JSON.stringify(
+				initialData.settings || {
+					MainThemeColor: "#ffffff",
+					EnableBackground: true,
+					EnableAnimationsTransitions: true,
+				},
+				null,
+				2,
+			);
+		}
+	});
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!userId) {
@@ -48,15 +61,24 @@
 		submitting = true;
 		errorMessage = "";
 
-		const payload = {
-			name,
-			description,
-			imgs: images,
-			settings: JSON.parse(settingsCode),
-			customStyleshiftItems: props.initialData?.customStyleshift || [],
-		};
-
 		try {
+			// Compress pending images
+			const pendingImagesData = [];
+			for (const file of pendingImages) {
+				const compressed = await compressImage(file);
+				pendingImagesData.push(compressed);
+			}
+
+			const payload: any = {
+				name,
+				description,
+				imgs: images,
+				coverImage,
+				pendingImages: pendingImagesData,
+				settings: JSON.parse(settingsCode),
+				customStyleshift: props.initialData?.customStyleshift || [],
+			};
+
 			const method = isEdit ? "PUT" : "POST";
 			const url = isEdit
 				? `${PUBLIC_API_URL}/themes/${props.initialData?.id}`
@@ -138,6 +160,8 @@
 					bind:name
 					bind:description
 					bind:images
+					bind:coverImage
+					bind:pendingImages
 					bind:errorMessage
 				/>
 				<button
@@ -173,6 +197,7 @@
 					{name}
 					{description}
 					{images}
+					{coverImage}
 					{settingsCode}
 				/>
 			</div>
@@ -260,6 +285,8 @@
 	}
 
 	.submit-btn {
-		align-self: flex-start;
+		width: 100%;
+		padding: 1.5rem 2rem;
+		font-size: 1.1rem;
 	}
 </style>

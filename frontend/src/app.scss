@@ -5,7 +5,6 @@
 	--radius-lg: 20px;
 	--radius-md: 12px;
 	--radius-sm: 6px;
-	--glass-blur: blur(16px);
 	--shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
 
 	// Dark Mode (Default)
@@ -81,8 +80,6 @@ a {
 
 .glass-panel {
 	background: var(--bg-glass);
-	backdrop-filter: var(--glass-blur);
-	-webkit-backdrop-filter: var(--glass-blur);
 	border: 1px solid var(--border-glass);
 	border-radius: var(--radius-lg);
 }
@@ -97,23 +94,14 @@ a {
 	font-family: inherit;
 
 	&:hover {
-		background: var(--text-primary);
-		color: var(--bg-dark);
+		background: rgba(var(--text-primary-rgb), 0.2);
+		color: var(--text-primary);
 		transform: translateY(-1px);
 	}
 
 	&:active {
 		transform: translateY(0);
 	}
-}
-
-.glow-text {
-	text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-	background: linear-gradient(
-		135deg,
-		var(--primary-glow),
-		var(--secondary-glow)
-	);
 }
 
 // Markdown Styles

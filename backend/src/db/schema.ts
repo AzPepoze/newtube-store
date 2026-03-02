@@ -15,6 +15,7 @@ export const themes = sqliteTable('Themes', {
 	name: text('name').notNull(),
 	description: text('description'),
 	images: text('images').default('[]'),
+	coverImage: text('cover_image'),
 	settings: text('settings').default('{}'),
 	customStyleshift: text('custom_styleshift').default('[]'),
 	isPublic: integer('is_public', { mode: 'boolean' }).default(true),

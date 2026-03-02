@@ -1,14 +1,70 @@
 <script lang="ts">
+	import { fade } from "svelte/transition";
 	import type { Theme } from "$lib/types";
+	import { PUBLIC_API_URL } from "$lib/constants";
 
 	let { theme }: { theme: Theme } = $props();
+
+	let currentImageIndex = $state(0);
+	let hoverTimer: ReturnType<typeof setInterval> | null = $state(null);
+	let ownerName = $state("");
+	let ownerAvatar = $state("");
+	const displayImages = $derived(theme.images || []);
+
+	$effect(() => {
+		if (theme.ownerId) {
+			fetch(`${PUBLIC_API_URL}/users/profile?userId=${theme.ownerId}`)
+				.then((res) => res.json())
+				.then((data) => {
+					ownerName = data.user?.name || theme.ownerId;
+					ownerAvatar = data.user?.avatarUrl || "";
+				})
+				.catch(() => {
+					ownerName = theme.ownerId;
+				});
+		}
+	});
+
+	function startImageCarousel() {
+		if (displayImages.length <= 1) return;
+		hoverTimer = setInterval(() => {
+			currentImageIndex =
+				(currentImageIndex + 1) % displayImages.length;
+		}, 2000);
+	}
+
+	function stopImageCarousel() {
+		if (hoverTimer) {
+			clearInterval(hoverTimer);
+			hoverTimer = null;
+		}
+		currentImageIndex = 0;
+	}
+
+	function getDisplayImage(): string {
+		if (theme.coverImage) {
+			return theme.coverImage;
+		}
+		return displayImages[currentImageIndex] || "";
+	}
 </script>
 
-<a href="/themes/{theme.id}" class="theme-card-wrapper">
+<a
+	href="/themes/{theme.id}"
+	class="theme-card-wrapper"
+	onmouseenter={startImageCarousel}
+	onmouseleave={stopImageCarousel}
+>
 	<div class="theme-card glass-panel">
 		<div class="card-image">
-			{#if theme.images && theme.images.length > 0}
-				<img src={theme.images[0]} alt={theme.name} />
+			{#if displayImages.length > 0}
+				{#key currentImageIndex}
+					<img
+						src={getDisplayImage()}
+						alt={theme.name}
+						in:fade={{ duration: 300 }}
+					/>
+				{/key}
 			{:else}
 				<div class="placeholder">
 					<span class="premium-font">{theme.name.charAt(0)}</span
@@ -27,7 +83,16 @@
 			</div>
 			<p>{theme.description || "No description provided."}</p>
 			<div class="footer">
-				<span class="owner">By @{theme.id.slice(0, 8)}</span>
+				<div class="owner-info">
+					{#if ownerAvatar}
+						<img
+							src={ownerAvatar}
+							alt={ownerName}
+							class="avatar"
+						/>
+					{/if}
+					<span class="owner">{ownerName || theme.ownerId}</span>
+				</div>
 				<button
 					class="install-btn"
 					onclick={(e) => {
@@ -158,15 +223,35 @@
 				justify-content: space-between;
 				align-items: center;
 				margin-top: 0.5rem;
+				gap: 0.75rem;
+
+				.owner-info {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+					flex: 1;
+
+					.avatar {
+						width: 24px;
+						height: 24px;
+						border-radius: 50%;
+						object-fit: cover;
+					}
+				}
 
 				.owner {
 					font-size: 0.8rem;
 					color: var(--text-muted);
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
 				}
 
 				.install-btn {
 					padding: 6px 16px;
 					font-size: 0.85rem;
+					white-space: nowrap;
 				}
 			}
 		}

@@ -160,6 +160,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 1rem;
 		padding: 0.6rem 1.2rem;
 		background: rgba(var(--text-primary-rgb), 0.05);
 		border: 1px solid var(--border-glass);

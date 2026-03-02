@@ -4,33 +4,42 @@
 	import TrashIcon from "$lib/icons/TrashIcon.svelte";
 	import UploadIcon from "$lib/icons/UploadIcon.svelte";
 	import LinkIcon from "$lib/icons/LinkIcon.svelte";
-	import { uploadImageFile } from "$lib/imageUtils";
-	import { PUBLIC_API_URL } from "$lib/constants";
 
 	let {
 		name = $bindable(""),
 		description = $bindable(""),
 		images = $bindable([]),
+		coverImage = $bindable(""),
+		pendingImages = $bindable<File[]>([]),
 		errorMessage = $bindable(""),
 	}: {
 		name: string;
 		description: string;
 		images: string[];
+		coverImage: string;
+		pendingImages: File[];
 		errorMessage: string;
 	} = $props();
 
 	let newImageUrl = $state("");
 	let isDragging = $state(false);
+	let coverImageDragging = $state(false);
+	let coverImagePending: File | null = $state(null);
 
-	async function handleFile(file: File) {
-		try {
-			const url = await uploadImageFile(file, PUBLIC_API_URL);
-			if (!images.includes(url)) {
-				images = [...images, url];
-			}
-		} catch (error: any) {
-			errorMessage = error.message || "Failed to upload image.";
+	function handleFile(file: File) {
+		if (!file.type.startsWith("image/")) {
+			errorMessage = "Please upload only image files.";
+			return;
 		}
+		pendingImages = [...pendingImages, file];
+	}
+
+	function handleCoverImageFile(file: File) {
+		if (!file.type.startsWith("image/")) {
+			errorMessage = "Please upload only image files.";
+			return;
+		}
+		coverImagePending = file;
 	}
 
 	function handleDrop(e: DragEvent) {
@@ -41,10 +50,26 @@
 		}
 	}
 
+	function handleCoverImageDrop(e: DragEvent) {
+		e.preventDefault();
+		coverImageDragging = false;
+		if (e.dataTransfer?.files) {
+			const file = e.dataTransfer.files[0];
+			if (file) handleCoverImageFile(file);
+		}
+	}
+
 	function handleFileSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (input.files) {
 			Array.from(input.files).forEach(handleFile);
+		}
+	}
+
+	function handleCoverImageSelect(e: Event) {
+		const input = e.target as HTMLInputElement;
+		if (input.files && input.files[0]) {
+			handleCoverImageFile(input.files[0]);
 		}
 	}
 
@@ -55,8 +80,28 @@
 		newImageUrl = "";
 	}
 
+	function addCoverImageUrl() {
+		const url = newImageUrl.trim();
+		if (!url) return;
+		coverImage = url;
+		newImageUrl = "";
+	}
+
 	function removeImage(index: number) {
 		images = images.filter((_, i) => i !== index);
+	}
+
+	function removePendingImage(index: number) {
+		pendingImages = pendingImages.filter((_, i) => i !== index);
+	}
+
+	function removeCoverImage() {
+		coverImage = "";
+		coverImagePending = null;
+	}
+
+	function removeCoverImagePending() {
+		coverImagePending = null;
 	}
 </script>
 
@@ -68,13 +113,101 @@
 			id="name"
 			type="text"
 			bind:value={name}
-			placeholder="Cyberpunk Neon"
+			placeholder="Theme Name"
 			required
 		/>
 	</div>
 	<div class="field">
 		<label for="description">Description (Markdown Supported)</label>
 		<MarkdownEditor bind:value={description} />
+	</div>
+</div>
+
+<div class="card glass-panel">
+	<div class="card-header">
+		<h3>Cover Image</h3>
+		<p class="hint">One image for your theme card preview</p>
+	</div>
+
+	<div
+		class="drop-zone"
+		class:dragging={coverImageDragging}
+		role="button"
+		tabindex="0"
+		ondragover={(e) => {
+			e.preventDefault();
+			coverImageDragging = true;
+		}}
+		ondragleave={() => (coverImageDragging = false)}
+		ondrop={handleCoverImageDrop}
+	>
+		<UploadIcon size={32} />
+		<div class="drop-text">
+			<p>Drag & Drop image here or</p>
+			<label class="browse-btn">
+				Browse Files
+				<input
+					type="file"
+					accept="image/*"
+					onchange={handleCoverImageSelect}
+					hidden
+				/>
+			</label>
+		</div>
+	</div>
+
+	<div class="url-input-wrapper">
+		<div class="icon-input">
+			<LinkIcon size={16} />
+			<input
+				type="url"
+				bind:value={newImageUrl}
+				placeholder="Or paste an image URL..."
+				onkeydown={(e) =>
+					e.key === "Enter" &&
+					(e.preventDefault(), addCoverImageUrl())}
+			/>
+		</div>
+		<button
+			type="button"
+			class="add-url-btn premium-button"
+			onclick={addCoverImageUrl}
+		>
+			Add URL
+		</button>
+	</div>
+
+	<div class="images-grid">
+		{#if coverImagePending}
+			<div class="image-item glass-panel" in:fade>
+				<img
+					src={URL.createObjectURL(coverImagePending)}
+					alt="Cover image pending"
+				/>
+				<div class="pending-badge">Pending</div>
+				<button
+					type="button"
+					class="remove-btn"
+					onclick={removeCoverImagePending}
+					title="Remove Cover Image"
+				>
+					<TrashIcon size={14} />
+				</button>
+			</div>
+		{/if}
+		{#if coverImage}
+			<div class="image-item glass-panel" in:fade>
+				<img src={coverImage} alt="Cover image" />
+				<button
+					type="button"
+					class="remove-btn"
+					onclick={removeCoverImage}
+					title="Remove Cover Image"
+				>
+					<TrashIcon size={14} />
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -133,6 +266,23 @@
 	</div>
 
 	<div class="images-grid">
+		{#each pendingImages as file, i}
+			<div class="image-item glass-panel" in:fade>
+				<img
+					src={URL.createObjectURL(file)}
+					alt="Pending screenshot {i + 1}"
+				/>
+				<div class="pending-badge">Pending</div>
+				<button
+					type="button"
+					class="remove-btn"
+					onclick={() => removePendingImage(i)}
+					title="Remove Screenshot"
+				>
+					<TrashIcon size={14} />
+				</button>
+			</div>
+		{/each}
 		{#each images as url, i}
 			<div class="image-item glass-panel" in:fade>
 				<img src={url} alt="Screenshot {i + 1}" />
@@ -318,6 +468,19 @@
 				width: 100%;
 				height: 100%;
 				object-fit: cover;
+			}
+
+			.pending-badge {
+				position: absolute;
+				top: 0.75rem;
+				left: 0.75rem;
+				background: rgba(100, 150, 255, 0.9);
+				color: white;
+				padding: 0.35rem 0.8rem;
+				border-radius: 4px;
+				font-size: 0.75rem;
+				font-weight: 700;
+				text-transform: uppercase;
 			}
 
 			.remove-btn {

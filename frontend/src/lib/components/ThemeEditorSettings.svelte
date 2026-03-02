@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { onMount, tick, untrack } from "svelte";
-	import { basicEditor } from "prism-code-editor/setups";
-	import "prism-code-editor/prism/languages/markup";
-	import "prism-code-editor/prism/languages/json";
+	import PrismEditor from "$lib/components/PrismEditor.svelte";
 
 	let {
 		settingsCode = $bindable(""),
@@ -11,33 +8,6 @@
 		settingsCode: string;
 		jsonError: string;
 	} = $props();
-
-	let editorInstance: any;
-
-	onMount(() => {
-		tick().then(() => {
-			editorInstance = basicEditor(".json-editor-wrapper", {
-				language: "json",
-				theme: "github-dark",
-				value: untrack(() => settingsCode),
-				onUpdate(val) {
-					settingsCode = val;
-				},
-			});
-		});
-
-		return () => {
-			if (editorInstance) {
-				editorInstance.remove();
-			}
-		};
-	});
-
-	$effect(() => {
-		if (editorInstance && settingsCode !== editorInstance.value) {
-			editorInstance.setOptions({ value: settingsCode });
-		}
-	});
 
 	$effect(() => {
 		try {
@@ -58,10 +28,7 @@
 			<span class="json-valid">✓ Valid JSON</span>
 		{/if}
 	</div>
-	<div
-		class="json-editor-wrapper"
-		style="height: 480px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); overflow: hidden;"
-	></div>
+	<PrismEditor bind:value={settingsCode} language="json" height="480px" />
 </div>
 
 <style lang="scss">

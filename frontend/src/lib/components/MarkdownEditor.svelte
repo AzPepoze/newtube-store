@@ -1,39 +1,14 @@
 <script lang="ts">
-	import { onMount, tick } from "svelte";
 	import { renderMarkdown } from "$lib/markdown";
-	import { basicEditor } from "prism-code-editor/setups";
-	import "prism-code-editor/prism/languages/markup";
-	import "prism-code-editor/prism/languages/markdown";
+	import PrismEditor from "$lib/components/PrismEditor.svelte";
 
 	let { value = $bindable("") }: { value: string } = $props();
-
-	let editorInstance: any;
-
-	onMount(async () => {
-		await tick();
-		editorInstance = basicEditor(".markdown-editor-wrapper", {
-			language: "markdown",
-			theme: "github-dark",
-			value: value,
-			onUpdate(val) {
-				value = val;
-			},
-		});
-	});
-
-	$effect(() => {
-		if (editorInstance && value !== editorInstance.value) {
-			editorInstance.setOptions({ value });
-		}
-	});
 </script>
 
 <div class="markdown-editor-container">
 	<div class="editor-pane">
 		<div class="header">EDITOR (MARKDOWN)</div>
-		<div class="editor-wrapper markdown-editor-wrapper">
-			<!-- prism-code-editor mounts here -->
-		</div>
+		<PrismEditor bind:value language="markdown" height="100%" />
 	</div>
 
 	<div class="preview-pane">
@@ -81,12 +56,6 @@
 
 	.editor-pane {
 		border-right: 1px solid var(--border-glass);
-	}
-
-	.editor-wrapper {
-		position: relative;
-		flex: 1;
-		overflow: hidden;
 	}
 
 	.preview-pane {

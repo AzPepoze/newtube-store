@@ -45,6 +45,20 @@ export const authRoute = new Elysia({ prefix: '/auth' })
 				sameSite,
 				secure: !frontendUrlStr.includes('localhost'),
 			});
+			cookie.userEmail.set({
+				value: googleUser.email,
+				path: '/',
+				maxAge: 2592000,
+				sameSite,
+				secure: !frontendUrlStr.includes('localhost'),
+			});
+			cookie.userName.set({
+				value: googleUser.name,
+				path: '/',
+				maxAge: 2592000,
+				sameSite,
+				secure: !frontendUrlStr.includes('localhost'),
+			});
 
 			return redirect(redirectDest);
 		} catch (error: any) {
