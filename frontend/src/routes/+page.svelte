@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { fly } from "svelte/transition";
+	import { fade, fly } from "svelte/transition";
 
 	let visible = $state(false);
 
@@ -9,7 +9,11 @@
 	});
 </script>
 
-<div class="welcome-container">
+<div
+	class="welcome-container"
+	in:fly={{ y: 20, duration: 300 }}
+	out:fade={{ duration: 200 }}
+>
 	{#if visible}
 		<section class="hero" in:fly={{ y: 30, duration: 800, delay: 200 }}>
 			<div class="hero-content">
@@ -87,7 +91,8 @@
 		.hero-logo {
 			height: 220px;
 			width: auto;
-			transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			transition: transform 0.3s
+				cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
 			&:hover {
 				transform: scale(1.05) rotate(2deg);

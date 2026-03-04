@@ -27,7 +27,11 @@
 	}
 </script>
 
-<div class="login-container">
+<div
+	class="login-container"
+	in:fly={{ y: 20, duration: 300 }}
+	out:fly={{ y: 20, duration: 200 }}
+>
 	<div class="login-card glass-panel" in:fly={{ y: 30, duration: 800 }}>
 		<h1 class="premium-font">Get Started</h1>
 		<p>Sign in to create and manage your NewTube themes</p>
@@ -43,7 +47,8 @@
 		</button>
 
 		<p class="terms">
-			By signing in, you agree to our <a href="/terms">Terms of Service</a
+			By signing in, you agree to our <a href="/terms"
+				>Terms of Service</a
 			>
 			and <a href="/privacy">Privacy Policy</a>.
 		</p>

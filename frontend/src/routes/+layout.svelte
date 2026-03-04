@@ -2,6 +2,7 @@
 	import "../app.scss";
 	import { onMount } from "svelte";
 	import { fade, fly } from "svelte/transition";
+	import { page } from "$app/state";
 	import { getSessionId, clearSessionId, handleAuthError } from "$lib/auth";
 	import UserIcon from "$lib/icons/UserIcon.svelte";
 	import LogoutIcon from "$lib/icons/LogoutIcon.svelte";
@@ -221,7 +222,9 @@
 	{/if}
 
 	<main>
-		{@render children()}
+		{#key page.url.pathname}
+			{@render children()}
+		{/key}
 	</main>
 
 	<Modal />
@@ -296,7 +299,7 @@
 
 				&:hover {
 					color: var(--primary-glow);
-					transform: translateY(-5px);
+					transform: translateY(-2px);
 				}
 			}
 		}
@@ -405,6 +408,14 @@
 	main {
 		animation: contentFade 0.6s ease-out;
 		flex: 1;
+		position: relative;
+
+		:global(> *) {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+		}
 	}
 
 	@keyframes contentFade {

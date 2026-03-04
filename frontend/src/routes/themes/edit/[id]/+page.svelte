@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { page } from "$app/state";
+	import { scale } from "svelte/transition";
 	import ThemeEditor from "$lib/components/ThemeEditor.svelte";
 	import { requireAuth } from "$lib/auth";
 	import type { Theme } from "$lib/types";
@@ -37,7 +38,11 @@
 	});
 </script>
 
-<div class="page-container">
+<div
+	class="page-container"
+	in:scale={{ delay: 200, start: 0.98, duration: 300 }}
+	out:scale={{ start: 0.98, duration: 200 }}
+>
 	{#if loading}
 		<div class="loading-state glass-panel">
 			<div class="spinner"></div>

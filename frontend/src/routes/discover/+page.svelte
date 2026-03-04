@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import ThemeCard from "$lib/components/ThemeCard.svelte";
 	import type { Theme } from "$lib/types";
-	import { fade, fly } from "svelte/transition";
+	import { fade, fly, scale } from "svelte/transition";
 	import { page } from "$app/state";
 	import SearchIcon from "$lib/icons/SearchIcon.svelte";
 	import CrossIcon from "$lib/icons/CrossIcon.svelte";
@@ -69,7 +69,11 @@
 	});
 </script>
 
-<div class="discover-container">
+<div
+	class="discover-container"
+	in:scale={{ delay: 200, start: 0.98, duration: 300 }}
+	out:scale={{ start: 0.98, duration: 200 }}
+>
 	<div class="discover-controls">
 		<div class="controls-left">
 			<div class="search-wrapper glass-panel">
@@ -243,7 +247,8 @@
 		.spinner {
 			width: 50px;
 			height: 50px;
-			border: 3px solid rgba(var(--text-primary-rgb, 255, 255, 255), 0.1);
+			border: 3px solid
+				rgba(var(--text-primary-rgb, 255, 255, 255), 0.1);
 			border-top-color: var(--primary-glow);
 			border-radius: 50%;
 			margin: 0 auto 1.5rem;

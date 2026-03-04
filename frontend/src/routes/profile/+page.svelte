@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { scale } from "svelte/transition";
 	import type { Theme } from "$lib/types";
 	import { requireAuth, getSessionId } from "$lib/auth";
 	import ProfileThemeList from "$lib/components/ProfileThemeList.svelte";
@@ -67,7 +68,11 @@
 	}
 </script>
 
-<div class="profile-container">
+<div
+	class="profile-container"
+	in:scale={{ delay: 200, start: 0.98, duration: 300 }}
+	out:scale={{ start: 0.98, duration: 200 }}
+>
 	<ProfileHeader {userData} />
 	<ProfileThemeList {loading} {myThemes} {deleteTheme} />
 </div>

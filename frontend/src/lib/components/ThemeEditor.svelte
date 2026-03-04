@@ -49,15 +49,7 @@
 			description = initialData.description || "";
 			images = initialData.images || [];
 			coverImage = initialData.coverImage || "";
-			settingsCode = JSON.stringify(
-				initialData.settings || {
-					MainThemeColor: "#ffffff",
-					EnableBackground: true,
-					EnableAnimationsTransitions: true,
-				},
-				null,
-				2,
-			);
+			settingsCode = "";
 		} else {
 			// Try to load draft from localStorage
 			const savedDraft = localStorage.getItem(DRAFT_KEY);
@@ -117,25 +109,7 @@
 
 	function clearDraft() {
 		localStorage.removeItem(DRAFT_KEY);
-		if (!isEdit) {
-			name = "";
-			description = defaultDescription;
-			images = [];
-			coverImage = "";
-			settingsCode = JSON.stringify(
-				{
-					MainThemeColor: "#ffffff",
-					EnableBackground: true,
-					EnableAnimationsTransitions: true,
-				},
-				null,
-				2,
-			);
-			infoMessage = "Draft cleared.";
-			setTimeout(() => {
-				if (infoMessage === "Draft cleared.") infoMessage = "";
-			}, 3000);
-		}
+		window.location.reload();
 	}
 
 	async function handleSubmit(e: Event) {
