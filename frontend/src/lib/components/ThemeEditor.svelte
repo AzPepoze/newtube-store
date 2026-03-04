@@ -174,16 +174,17 @@
 				body: JSON.stringify(payload),
 			});
 
-			if (!response.ok)
+			if (!response.ok) {
+				const errorBody = await response.text().catch(() => "");
 				throw new Error(
-					`Failed to ${isEdit ? "update" : "create"} theme`,
+					`[${response.status}] ${errorBody || response.statusText}`,
 				);
+			}
 
 			const data = await response
 				.json()
 				.catch(() => ({ id: props.initialData?.id }));
 
-			// Clear draft on success
 			if (!isEdit) {
 				localStorage.removeItem(DRAFT_KEY);
 			}
@@ -193,12 +194,9 @@
 				window.location.href = `/themes/${data.id || props.initialData?.id}`;
 			}, 1000);
 		} catch (error) {
-			ui.showModal(
-				"Operation Failed",
-				`Failed to ${isEdit ? "update" : "create"} theme. Please try again.`,
-				"error",
-			);
-			errorMessage = `Failed to ${isEdit ? "update" : "create"} theme. Please try again.`;
+			const detail = error instanceof Error ? error.message : String(error);
+			ui.showModal("Operation Failed", detail, "error");
+			errorMessage = detail;
 		} finally {
 			submitting = false;
 		}

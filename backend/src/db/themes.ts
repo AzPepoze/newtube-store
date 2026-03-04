@@ -90,7 +90,7 @@ export async function createTheme(db: Database, env: Env, ownerId: string, data:
 		});
 		return result;
 	} catch (error) {
-		console.error('[db/createTheme] Insert failed:', error);
+		console.error('[db/createTheme] Insert failed:', (error as any)?.message ?? error);
 		throw error;
 	}
 }

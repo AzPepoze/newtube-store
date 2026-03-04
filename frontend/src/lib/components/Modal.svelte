@@ -2,6 +2,10 @@
     import { ui } from "$lib/ui.svelte";
     import { fade, fly } from "svelte/transition";
     import CrossIcon from "$lib/icons/CrossIcon.svelte";
+    import AlertTriangleIcon from "$lib/icons/AlertTriangleIcon.svelte";
+    import AlertCircleIcon from "$lib/icons/AlertCircleIcon.svelte";
+    import CheckCircleIcon from "$lib/icons/CheckCircleIcon.svelte";
+    import InfoCircleIcon from "$lib/icons/InfoCircleIcon.svelte";
 
     let modal = $derived(ui.modal);
 
@@ -13,7 +17,6 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if modal.show}
-    <!-- Backdrop -->
     <div
         class="modal-backdrop"
         onclick={() => ui.closeModal()}
@@ -23,7 +26,6 @@
         transition:fade={{ duration: 200 }}
     ></div>
 
-    <!-- Modal Content -->
     <div
         class="modal-container"
         in:fly={{ y: 20, duration: 400, opacity: 0 }}
@@ -35,19 +37,19 @@
                 onclick={() => ui.closeModal()}
                 aria-label="Close"
             >
-                <CrossIcon size={18} />
+                <CrossIcon size={16} />
             </button>
 
             <div class="modal-header">
-                <div class="icon-wrapper">
+                <div class="icon-wrapper {modal.type}">
                     {#if modal.type === "error"}
-                        <span class="status-icon">⚠️</span>
+                        <AlertTriangleIcon size={28} />
                     {:else if modal.type === "warning"}
-                        <span class="status-icon">⚡</span>
+                        <AlertCircleIcon size={28} />
                     {:else if modal.type === "success"}
-                        <span class="status-icon">✨</span>
+                        <CheckCircleIcon size={28} />
                     {:else}
-                        <span class="status-icon">ℹ️</span>
+                        <InfoCircleIcon size={28} />
                     {/if}
                 </div>
                 <h2 class="premium-font">{modal.title}</h2>
@@ -91,8 +93,8 @@
     .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
         z-index: 9999;
     }
 
@@ -109,8 +111,8 @@
 
     .modal-content {
         width: 100%;
-        max-width: 450px;
-        padding: 2.5rem;
+        max-width: 420px;
+        padding: 2rem;
         pointer-events: auto;
         position: relative;
         overflow: hidden;
@@ -121,7 +123,7 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
         }
 
         &.error::before {
@@ -142,16 +144,20 @@
         position: absolute;
         top: 1rem;
         right: 1rem;
-        background: transparent;
-        border: none;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         color: var(--text-muted);
         cursor: pointer;
-        padding: 0.5rem;
-        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.2s;
 
         &:hover {
-            background: rgba(var(--text-primary-rgb), 0.1);
+            background: rgba(255, 255, 255, 0.12);
             color: var(--text-primary);
             transform: rotate(90deg);
         }
@@ -162,49 +168,76 @@
         flex-direction: column;
         align-items: center;
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         text-align: center;
 
-        .icon-wrapper {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-
         h2 {
-            font-size: 1.75rem;
+            font-size: 1.6rem;
             margin: 0;
         }
     }
 
+    .icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.error {
+            background: rgba(255, 50, 50, 0.12);
+            color: #ff5555;
+            border: 1px solid rgba(255, 50, 50, 0.2);
+        }
+        &.warning {
+            background: rgba(255, 215, 0, 0.12);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        &.success {
+            background: rgba(0, 255, 150, 0.12);
+            color: #00ff96;
+            border: 1px solid rgba(0, 255, 150, 0.2);
+        }
+        &.info {
+            background: rgba(0, 210, 255, 0.12);
+            color: #00d2ff;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+    }
+
     .modal-body {
-        margin-bottom: 2rem;
+        margin-bottom: 1.75rem;
         text-align: center;
         color: var(--text-secondary);
         line-height: 1.6;
 
         p {
             margin: 0;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
+            word-break: break-word;
         }
     }
 
     .modal-footer {
         display: flex;
+        gap: 0.75rem;
         justify-content: center;
 
         .action-btn {
-            width: 100%;
-            max-width: 200px;
-            padding: 0.8rem 1.5rem;
+            flex: 1;
+            max-width: 180px;
+            padding: 0.75rem 1.25rem;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
+            font-size: 0.9rem;
 
             &.secondary-btn {
                 background: rgba(255, 255, 255, 0.05);
