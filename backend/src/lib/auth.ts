@@ -32,12 +32,18 @@ export async function getGoogleUser(env: any, code: string, redirectUri: string)
 
     const tokens: any = await tokenResponse.json();
     if (!tokens.access_token) {
-        throw new Error('Failed to get access token');
+        throw new Error(`Failed to get access token: ${tokens.error_description || tokens.error || 'Unknown error'}`);
     }
 
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
+
+    if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        console.error('[Google Auth] Failed to fetch user info:', errorData);
+        throw new Error('Failed to fetch user info from Google');
+    }
 
     const userData: any = await userResponse.json();
     return {
