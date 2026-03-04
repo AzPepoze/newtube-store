@@ -28,7 +28,12 @@
 		/* Enable all strict type-checking options. */
 		"strict": true,
 		/* Skip type checking all .d.ts files. */
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		/* Module resolution for monorepo shared packages */
+		"paths": {
+			"shared": ["../shared"],
+			"shared/*": ["../shared/*"]
+		}
 	},
 	"exclude": ["test"],
 	"include": ["worker-configuration.d.ts", "src/**/*.ts"]

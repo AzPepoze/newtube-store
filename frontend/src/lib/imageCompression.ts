@@ -1,3 +1,7 @@
+import { VALIDATION_LIMITS, formatBytes } from 'shared';
+
+const MAX_IMAGE_SIZE_BYTES = VALIDATION_LIMITS.IMAGE_MAX_BYTES;
+
 export interface CompressedImage {
 	data: string;
 	mimeType: string;
@@ -9,8 +13,13 @@ export async function compressImage(file: File): Promise<CompressedImage> {
 		return new Promise((resolve, reject) => {
 			const reader = new FileReader();
 			reader.onload = () => {
+				const dataUrl = reader.result as string;
+				if (!validateImageSize(dataUrl)) {
+					reject(new Error(`Image exceeds ${formatBytes(MAX_IMAGE_SIZE_BYTES)} limit`));
+					return;
+				}
 				resolve({
-					data: reader.result as string,
+					data: dataUrl,
 					mimeType: 'image/gif',
 				});
 			};
@@ -23,6 +32,10 @@ export async function compressImage(file: File): Promise<CompressedImage> {
 	const dataUrl = await readFileAsDataUrl(file);
 	const canvas = await createCanvasFromImage(dataUrl);
 	const compressedDataUrl = await canvasToWebP(canvas);
+
+	if (!validateImageSize(compressedDataUrl)) {
+		throw new Error(`Image exceeds ${formatBytes(MAX_IMAGE_SIZE_BYTES)} limit`);
+	}
 
 	return {
 		data: compressedDataUrl,
@@ -49,6 +62,7 @@ function createCanvasFromImage(dataUrl: string): Promise<HTMLCanvasElement> {
 			canvas.width = img.width * scale;
 			canvas.height = img.height * scale;
 			const context = canvas.getContext('2d')!;
+			context.imageSmoothingEnabled = true;
 			context.drawImage(img, 0, 0, canvas.width, canvas.height);
 			resolve(canvas);
 		};
@@ -74,4 +88,13 @@ function canvasToWebP(canvas: HTMLCanvasElement): Promise<string> {
 			0.75,
 		);
 	});
+}
+
+function validateImageSize(dataUrl: string): boolean {
+	const base64Data = dataUrl.split(',')[1];
+	if (!base64Data) return false;
+
+	const sizeInBytes = Math.ceil((base64Data.length * 3) / 4);
+
+	return sizeInBytes <= MAX_IMAGE_SIZE_BYTES;
 }

@@ -7,6 +7,11 @@
 	import { PUBLIC_API_URL } from "$lib/constants";
 	import { ui } from "$lib/ui.svelte";
 	import { compressImage } from "$lib/imageCompression";
+	import {
+		validateTitle,
+		validateDescription,
+		validateSettingsJSON,
+	} from "$lib/validation";
 	import ThemeEditorBasicInfo from "$lib/components/ThemeEditorBasicInfo.svelte";
 	import ThemeEditorSettings from "$lib/components/ThemeEditorSettings.svelte";
 	import ThemeEditorPreview from "$lib/components/ThemeEditorPreview.svelte";
@@ -30,6 +35,8 @@
 	let infoMessage = $state("");
 	let activeTab = $state<"info" | "settings" | "preview">("info");
 	let jsonError = $state("");
+	let titleError = $state("");
+	let descriptionError = $state("");
 
 	const DRAFT_KEY = "newtube_theme_draft";
 	let hasRestored = false;
@@ -99,6 +106,15 @@
 		}
 	});
 
+	// Track validation state for submit button
+	$effect(() => {
+		const titleValidation = validateTitle(name);
+		titleError = titleValidation.message || "";
+
+		const descriptionValidation = validateDescription(description);
+		descriptionError = descriptionValidation.message || "";
+	});
+
 	function clearDraft() {
 		localStorage.removeItem(DRAFT_KEY);
 		if (!isEdit) {
@@ -129,6 +145,28 @@
 			return;
 		}
 
+		// Validate title
+		const titleValidation = validateTitle(name);
+		if (!titleValidation.valid) {
+			errorMessage = titleValidation.message || "Invalid title";
+			return;
+		}
+
+		// Validate description
+		const descriptionValidation = validateDescription(description);
+		if (!descriptionValidation.valid) {
+			errorMessage =
+				descriptionValidation.message || "Invalid description";
+			return;
+		}
+
+		// Validate JSON settings
+		const jsonValidation = validateSettingsJSON(settingsCode);
+		if (!jsonValidation.valid) {
+			errorMessage = jsonValidation.message || "Invalid JSON settings";
+			return;
+		}
+
 		if (jsonError) {
 			errorMessage = "Please fix the JSON settings before saving.";
 			return;
@@ -141,14 +179,33 @@
 			// Compress pending images
 			const pendingImagesData = [];
 			for (const file of pendingImages) {
-				const compressed = await compressImage(file);
-				pendingImagesData.push(compressed);
+				try {
+					const compressed = await compressImage(file);
+					pendingImagesData.push(compressed);
+				} catch (error) {
+					const detail =
+						error instanceof Error
+							? error.message
+							: String(error);
+					throw new Error(`Image compression failed: ${detail}`);
+				}
 			}
 
 			// Compress pending cover image
 			let pendingCoverImageData = null;
 			if (coverImagePending) {
-				pendingCoverImageData = await compressImage(coverImagePending);
+				try {
+					pendingCoverImageData =
+						await compressImage(coverImagePending);
+				} catch (error) {
+					const detail =
+						error instanceof Error
+							? error.message
+							: String(error);
+					throw new Error(
+						`Cover image compression failed: ${detail}`,
+					);
+				}
 			}
 
 			const payload: any = {
@@ -194,7 +251,8 @@
 				window.location.href = `/themes/${data.id || props.initialData?.id}`;
 			}, 1000);
 		} catch (error) {
-			const detail = error instanceof Error ? error.message : String(error);
+			const detail =
+				error instanceof Error ? error.message : String(error);
 			ui.showModal("Operation Failed", detail, "error");
 			errorMessage = detail;
 		} finally {
@@ -286,7 +344,10 @@
 					in:fly={{ y: 20, duration: 400, delay: 150 }}
 					out:fly={{ y: -20, duration: 250 }}
 				>
-					<ThemeEditorSettings bind:settingsCode bind:jsonError />
+					<ThemeEditorSettings
+						bind:settingsCode
+						bind:jsonError
+					/>
 				</div>
 			{:else}
 				<div
@@ -320,7 +381,10 @@
 			<button
 				type="submit"
 				class="submit-btn premium-button"
-				disabled={submitting || !!jsonError}
+				disabled={submitting ||
+					!!jsonError ||
+					!!titleError ||
+					!!descriptionError}
 			>
 				{submitting
 					? "Saving..."

@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { searchThemes, getThemeById, createTheme, updateTheme, deleteTheme } from '../db/themes';
 import { contextPlugin } from '../plugins/context';
 import { authGuard } from '../plugins/auth-guard';
+import { validateThemeTitle, validateThemeDescription, validateSettingsJSON, validatePendingImages, validatePendingCoverImage } from '../lib/validation';
 
 export const themeRoute = new Elysia({ prefix: '/themes' })
 	.use(contextPlugin)
@@ -19,6 +20,39 @@ export const themeRoute = new Elysia({ prefix: '/themes' })
 	.use(authGuard)
 	.post('/', async ({ userId, body, db, set, env }) => {
 		console.log('[Theme Route] Creating theme for user:', userId);
+
+		// Validate request data
+		const data = body as any;
+		const titleValidation = validateThemeTitle(data.name);
+		if (!titleValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid title', message: titleValidation.message };
+		}
+
+		const descriptionValidation = validateThemeDescription(data.description);
+		if (!descriptionValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid description', message: descriptionValidation.message };
+		}
+
+		const pendingImagesValidation = validatePendingImages(data.pendingImages);
+		if (!pendingImagesValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid image', message: pendingImagesValidation.message };
+		}
+
+		const pendingCoverImageValidation = validatePendingCoverImage(data.pendingCoverImage);
+		if (!pendingCoverImageValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid cover image', message: pendingCoverImageValidation.message };
+		}
+
+		const settingsValidation = validateSettingsJSON(data.settings);
+		if (!settingsValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid settings', message: settingsValidation.message };
+		}
+
 		try {
 			if (env.THEME_RATE_LIMITER) {
 				const { success } = await env.THEME_RATE_LIMITER.limit({ key: userId! });
@@ -33,7 +67,7 @@ export const themeRoute = new Elysia({ prefix: '/themes' })
 		}
 
 		try {
-			const result = await createTheme(db, env, userId!, body as any);
+			const result = await createTheme(db, env, userId!, data);
 			if (!result) {
 				console.error('[Theme Route] createTheme returned null/undefined');
 				set.status = 500;
@@ -47,7 +81,39 @@ export const themeRoute = new Elysia({ prefix: '/themes' })
 		}
 	})
 	.put('/:id', async ({ userId, params, body, set, db, env }) => {
-		const updated = await updateTheme(db, env, params.id, userId!, body as any);
+		// Validate request data
+		const data = body as any;
+		const titleValidation = validateThemeTitle(data.name);
+		if (!titleValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid title', message: titleValidation.message };
+		}
+
+		const descriptionValidation = validateThemeDescription(data.description);
+		if (!descriptionValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid description', message: descriptionValidation.message };
+		}
+
+		const pendingImagesValidation = validatePendingImages(data.pendingImages);
+		if (!pendingImagesValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid image', message: pendingImagesValidation.message };
+		}
+
+		const pendingCoverImageValidation = validatePendingCoverImage(data.pendingCoverImage);
+		if (!pendingCoverImageValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid cover image', message: pendingCoverImageValidation.message };
+		}
+
+		const settingsValidation = validateSettingsJSON(data.settings);
+		if (!settingsValidation.valid) {
+			set.status = 400;
+			return { error: 'Invalid settings', message: settingsValidation.message };
+		}
+
+		const updated = await updateTheme(db, env, params.id, userId!, data);
 		if (!updated) {
 			set.status = 403;
 			return { error: 'Unauthorized', message: 'Theme not found or you do not have permission to edit it' };

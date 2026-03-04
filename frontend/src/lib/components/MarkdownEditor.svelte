@@ -2,6 +2,7 @@
 	import { renderMarkdown } from "$lib/markdown";
 	import PrismEditor from "$lib/components/PrismEditor.svelte";
 	import CustomDropdown from "$lib/components/CustomDropdown.svelte";
+	import { validateDescription, LIMITS } from "$lib/validation";
 	import BoldIcon from "$lib/icons/BoldIcon.svelte";
 	import ItalicIcon from "$lib/icons/ItalicIcon.svelte";
 	import HeadingIcon from "$lib/icons/HeadingIcon.svelte";
@@ -15,6 +16,14 @@
 	let { value = $bindable("") }: { value: string } = $props();
 	let mode = $state<"split" | "editor" | "preview">("split");
 	let editorRef = $state<ReturnType<typeof PrismEditor>>();
+	let descriptionError = $state("");
+	let isDescriptionDisabled = $state(false);
+
+	$effect(() => {
+		const validation = validateDescription(value);
+		descriptionError = validation.message || "";
+		isDescriptionDisabled = value.length >= LIMITS.description;
+	});
 
 	const headingOptions = [
 		{ label: "H1 - Large", onClick: () => handleAction("h1") },
@@ -181,6 +190,18 @@
 					{@html renderMarkdown(value)}
 				</div>
 			</div>
+		{/if}
+	</div>
+
+	<div class="editor-footer">
+		<div
+			class="counter"
+			class:error={!descriptionError && isDescriptionDisabled}
+		>
+			{value.length} / {LIMITS.description}
+		</div>
+		{#if descriptionError}
+			<span class="error-text">{descriptionError}</span>
 		{/if}
 	</div>
 </div>
@@ -353,5 +374,30 @@
 		overflow-y: auto;
 		color: var(--text-secondary);
 		line-height: 1.6;
+	}
+
+	.editor-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.75rem 1rem;
+		background: rgba(var(--text-primary-rgb), 0.02);
+		border-top: 1px solid var(--border-glass);
+		font-size: 0.85rem;
+		gap: 1rem;
+	}
+
+	.counter {
+		color: var(--text-secondary);
+		font-weight: 600;
+
+		&.error {
+			color: var(--error, #ff5a5a);
+		}
+	}
+
+	.error-text {
+		color: var(--error, #ff5a5a);
+		font-weight: 500;
 	}
 </style>

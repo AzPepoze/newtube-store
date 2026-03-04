@@ -1,5 +1,10 @@
 <script lang="ts">
 	import PrismEditor from "$lib/components/PrismEditor.svelte";
+	import {
+		validateSettingsJSON,
+		formatBytes,
+		LIMITS,
+	} from "$lib/validation";
 
 	let {
 		settingsCode = $bindable(""),
@@ -9,26 +14,42 @@
 		jsonError: string;
 	} = $props();
 
+	let sizeInBytes = $state(0);
+	let isSettingsDisabled = $state(false);
+
 	$effect(() => {
-		try {
-			JSON.parse(settingsCode);
-			jsonError = "";
-		} catch (e: any) {
-			jsonError = e.message;
-		}
+		const validation = validateSettingsJSON(settingsCode);
+		sizeInBytes = validation.sizeInBytes;
+		jsonError = validation.message || "";
+		isSettingsDisabled =
+			!validation.valid &&
+			validation.sizeInBytes > LIMITS.settingsJson;
 	});
 </script>
 
 <div class="card glass-panel">
 	<div class="card-header">
 		<h3>Theme Settings (JSON)</h3>
+		<span
+			class="size-display"
+			class:error={sizeInBytes > LIMITS.settingsJson}
+		>
+			{formatBytes(sizeInBytes)} / {formatBytes(LIMITS.settingsJson)}
+		</span>
+	</div>
+	<PrismEditor
+		bind:value={settingsCode}
+		language="json"
+		height="480px"
+		readOnly={isSettingsDisabled}
+	/>
+	<div class="editor-footer">
 		{#if jsonError}
 			<span class="json-error">{jsonError}</span>
-		{:else}
+		{:else if settingsCode}
 			<span class="json-valid">✓ Valid JSON</span>
 		{/if}
 	</div>
-	<PrismEditor bind:value={settingsCode} language="json" height="480px" />
 </div>
 
 <style lang="scss">
@@ -51,14 +72,31 @@
 			justify-content: space-between;
 			align-items: center;
 
-			.json-error {
-				font-size: 0.8rem;
-				color: #ff3232;
-			}
-			.json-valid {
-				font-size: 0.8rem;
+			.size-display {
+				font-size: 0.85rem;
 				color: var(--text-secondary);
+				font-weight: 600;
+
+				&.error {
+					color: var(--error, #ff5a5a);
+				}
 			}
+		}
+	}
+
+	.editor-footer {
+		display: flex;
+		gap: 1rem;
+		padding-top: 0.75rem;
+		font-size: 0.85rem;
+
+		.json-error {
+			color: var(--error, #ff5a5a);
+			font-weight: 500;
+		}
+
+		.json-valid {
+			color: var(--text-secondary);
 		}
 	}
 </style>

@@ -4,6 +4,7 @@
 	import TrashIcon from "$lib/icons/TrashIcon.svelte";
 	import UploadIcon from "$lib/icons/UploadIcon.svelte";
 	import LinkIcon from "$lib/icons/LinkIcon.svelte";
+	import { validateTitle, LIMITS } from "$lib/validation";
 
 	let {
 		name = $bindable(""),
@@ -26,6 +27,14 @@
 	let newImageUrl = $state("");
 	let isDragging = $state(false);
 	let coverImageDragging = $state(false);
+	let titleError = $state("");
+	let isNameDisabled = $state(false);
+
+	$effect(() => {
+		const validation = validateTitle(name);
+		titleError = validation.message || "";
+		isNameDisabled = name.length >= LIMITS.title;
+	});
 
 	function handleFile(file: File) {
 		if (!file.type.startsWith("image/")) {
@@ -115,8 +124,20 @@
 			type="text"
 			bind:value={name}
 			placeholder="Theme Name"
+			disabled={isNameDisabled}
 			required
 		/>
+		<div class="field-meta">
+			<span
+				class="counter"
+				class:error={!titleError && name.length >= LIMITS.title}
+			>
+				{name.length} / {LIMITS.title}
+			</span>
+			{#if titleError}
+				<span class="error-text">{titleError}</span>
+			{/if}
+		</div>
 	</div>
 	<div class="field">
 		<label for="description">Description (Markdown Supported)</label>
@@ -362,6 +383,34 @@
 				border-color: var(--text-primary);
 				background: rgba(var(--text-primary-rgb), 0.05);
 			}
+
+			&:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+				background: rgba(var(--text-primary-rgb), 0.01);
+			}
+		}
+
+		.field-meta {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			font-size: 0.85rem;
+			gap: 1rem;
+		}
+
+		.counter {
+			color: var(--text-secondary);
+			font-weight: 600;
+
+			&.error {
+				color: var(--error, #ff5a5a);
+			}
+		}
+
+		.error-text {
+			color: var(--error, #ff5a5a);
+			font-weight: 500;
 		}
 	}
 
