@@ -4,27 +4,36 @@ import { authGuard } from '../plugins/auth-guard';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-async function uploadImageToR2(fileData: string, mimeType: string): Promise<string> {
-	const base64Data = fileData.includes(',') ? fileData.split(',')[1] : fileData;
-	const byteCharacters = atob(base64Data);
-	const byteNumbers = new Array(byteCharacters.length);
-	for (let i = 0; i < byteCharacters.length; i++) {
-		byteNumbers[i] = byteCharacters.charCodeAt(i);
+async function uploadImageToR2(env: Env, fileData: string, mimeType: string): Promise<string> {
+	console.log('[uploadImageToR2] Starting upload...', { mimeType, dataLength: fileData?.length });
+	try {
+		const base64Data = fileData.includes(',') ? fileData.split(',')[1] : fileData;
+		const byteCharacters = atob(base64Data);
+		const byteNumbers = new Array(byteCharacters.length);
+		for (let i = 0; i < byteCharacters.length; i++) {
+			byteNumbers[i] = byteCharacters.charCodeAt(i);
+		}
+		const byteArray = new Uint8Array(byteNumbers);
+
+		const extension = mimeType.split('/')[1] ?? 'webp';
+		const objectKey = `${crypto.randomUUID()}.${extension}`;
+
+		console.log('[uploadImageToR2] Putting object to R2:', objectKey);
+		const blob = new Blob([byteArray], { type: mimeType });
+		await env.IMAGES.put(objectKey, blob.stream(), {
+			httpMetadata: { contentType: mimeType },
+		});
+
+		const url = `${env.R2_PUBLIC_URL}/${objectKey}`;
+		console.log('[uploadImageToR2] Upload successful:', url);
+		return url;
+	} catch (error) {
+		console.error('[uploadImageToR2] Upload failed:', error);
+		throw error;
 	}
-	const byteArray = new Uint8Array(byteNumbers);
-
-	const extension = mimeType.split('/')[1] ?? 'webp';
-	const objectKey = `${crypto.randomUUID()}.${extension}`;
-
-	const blob = new Blob([byteArray], { type: mimeType });
-	await env.IMAGES.put(objectKey, blob.stream(), {
-		httpMetadata: { contentType: mimeType },
-	});
-
-	return `${env.R2_PUBLIC_URL}/${objectKey}`;
 }
 
-async function deleteImageFromR2(imageUrl: string): Promise<void> {
+async function deleteImageFromR2(env: Env, imageUrl: string): Promise<void> {
 	try {
 		const url = new URL(imageUrl);
 		const objectKey = url.pathname.substring(1);
@@ -36,7 +45,7 @@ async function deleteImageFromR2(imageUrl: string): Promise<void> {
 
 export const imageRoute = new Elysia({ prefix: '/images' })
 	.use(authGuard)
-	.post('/upload', async ({ userId, request, set }) => {
+	.post('/upload', async ({ userId, request, set, env }) => {
 		const { success } = await env.UPLOAD_RATE_LIMITER.limit({ key: userId! });
 		if (!success) {
 			set.status = 429;
@@ -67,13 +76,13 @@ export const imageRoute = new Elysia({ prefix: '/images' })
 
 		return { url: publicUrl };
 	})
-	.delete('/delete', async ({ userId, body, set }) => {
+	.delete('/delete', async ({ userId, body, set, env }) => {
 		const { url } = body as { url: string };
 		if (!url) {
 			set.status = 400;
 			return 'URL is required';
 		}
-		await deleteImageFromR2(url);
+		await deleteImageFromR2(env, url);
 		return { success: true };
 	});
 

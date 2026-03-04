@@ -36,7 +36,12 @@ const app = new Elysia({ adapter: CloudflareAdapter })
 		}
 
 		set.status = 500;
-		return 'Internal Server Error';
+		return {
+			error: 'Internal Server Error',
+			message: (error as any).message || 'Unknown error',
+			code: code,
+			stack: (error as any).stack
+		};
 	})
 	.compile();
 

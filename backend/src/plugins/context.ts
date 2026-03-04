@@ -19,5 +19,6 @@ export const contextPlugin = new Elysia({ name: 'context' })
         return {
             userId,
             db,
+            env,
         };
     });

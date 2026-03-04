@@ -18,40 +18,45 @@ export const themeRoute = new Elysia({ prefix: '/themes' })
         return theme;
     })
     .use(authGuard)
-    .post('/', async ({ userId, body, db, set }) => {
-        console.log('Creating theme for user:', userId);
+    .post('/', async ({ userId, body, db, set, env }) => {
+        console.log('[Theme Route] Creating theme for user:', userId);
         try {
             if (env.THEME_RATE_LIMITER) {
                 const { success } = await env.THEME_RATE_LIMITER.limit({ key: userId! });
                 if (!success) {
-                    console.warn('Rate limit exceeded for user:', userId);
+                    console.warn('[Theme Route] Rate limit exceeded for user:', userId);
                     set.status = 429;
                     return 'Too many themes created. Try again later.';
                 }
             }
         } catch (error) {
-            console.error('Rate limiter error:', error);
+            console.error('[Theme Route] Rate limiter error:', error);
         }
 
         try {
-            const result = await createTheme(db, userId!, body as any);
-            console.log('Theme created successfully:', result.id);
+            const result = await createTheme(db, env, userId!, body as any);
+            if (!result) {
+                console.error('[Theme Route] createTheme returned null/undefined');
+                set.status = 500;
+                return 'Failed to create theme: database returned no result';
+            }
+            console.log('[Theme Route] Theme created successfully:', result.id);
             return result;
         } catch (error) {
-            console.error('Database error in createTheme:', error);
+            console.error('[Theme Route] Database error in createTheme:', error);
             throw error;
         }
     })
-    .put('/:id', async ({ userId, params, body, set, db }) => {
-        const updated = await updateTheme(db, params.id, userId!, body as any);
+    .put('/:id', async ({ userId, params, body, set, db, env }) => {
+        const updated = await updateTheme(db, env, params.id, userId!, body as any);
         if (!updated) {
             set.status = 403;
             return 'Theme not found or Unauthorized';
         }
         set.status = 204;
     })
-    .delete('/:id', async ({ userId, params, set, db }) => {
-        const deleted = await deleteTheme(db, params.id, userId!);
+    .delete('/:id', async ({ userId, params, set, db, env }) => {
+        const deleted = await deleteTheme(db, env, params.id, userId!);
         if (!deleted) {
             set.status = 403;
             return 'Theme not found or Unauthorized';

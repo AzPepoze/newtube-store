@@ -8,7 +8,7 @@ import { contextPlugin } from '../plugins/context';
 
 export const authRoute = new Elysia({ prefix: '/auth' })
 	.use(contextPlugin)
-	.get('/google', async ({ request, redirect }) => {
+	.get('/google', async ({ request, redirect, env }) => {
 		const url = new URL(request.url);
 		let protocol = url.protocol;
 		if (!url.hostname.includes('localhost')) {
@@ -20,7 +20,7 @@ export const authRoute = new Elysia({ prefix: '/auth' })
 		const authUrl = await getGoogleAuthUrl(env, redirectUri);
 		return redirect(authUrl);
 	})
-	.get('/callback', async ({ request, query, redirect, set, cookie }) => {
+	.get('/callback', async ({ request, query, redirect, set, cookie, env }) => {
 		const code = query.code as string;
 		if (!code) {
 			console.error('[Auth Callback] Missing code in query params');

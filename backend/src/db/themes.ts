@@ -35,7 +35,7 @@ export function getThemesByOwner(db: Database, ownerId: string) {
 	return db.select().from(themes).where(eq(themes.ownerId, ownerId)).all();
 }
 
-export async function createTheme(db: Database, ownerId: string, data: {
+export async function createTheme(db: Database, env: Env, ownerId: string, data: {
 	name: string;
 	description?: string;
 	imgs?: string[];
@@ -52,7 +52,7 @@ export async function createTheme(db: Database, ownerId: string, data: {
 	if (data.pendingImages && Array.isArray(data.pendingImages)) {
 		for (const image of data.pendingImages) {
 			try {
-				const url = await uploadImageToR2(image.data, image.mimeType);
+				const url = await uploadImageToR2(env, image.data, image.mimeType);
 				uploadedUrls.push(url);
 			} catch (error) {
 				console.error('Error uploading theme image:', error);
@@ -64,7 +64,7 @@ export async function createTheme(db: Database, ownerId: string, data: {
 	let finalCoverImage = data.coverImage;
 	if (data.pendingCoverImage) {
 		try {
-			finalCoverImage = await uploadImageToR2(data.pendingCoverImage.data, data.pendingCoverImage.mimeType);
+			finalCoverImage = await uploadImageToR2(env, data.pendingCoverImage.data, data.pendingCoverImage.mimeType);
 		} catch (error) {
 			console.error('Error uploading cover image:', error);
 		}
@@ -73,19 +73,29 @@ export async function createTheme(db: Database, ownerId: string, data: {
 	// Combine with provided image URLs
 	const allImages = [...(data.imgs ?? []), ...uploadedUrls];
 
-	return db.insert(themes).values({
-		id,
-		ownerId,
-		name: data.name,
-		description: data.description,
-		images: allImages,
-		coverImage: finalCoverImage,
-		settings: data.settings ?? {},
-		customStyleshift: data.customStyleshift ?? [],
-	}).returning({ id: themes.id }).then(res => res[0]);
+	console.log('[db/createTheme] Inserting into database...', { id, ownerId, name: data.name });
+	try {
+		const result = await db.insert(themes).values({
+			id,
+			ownerId,
+			name: data.name,
+			description: data.description,
+			images: allImages,
+			coverImage: finalCoverImage,
+			settings: data.settings ?? {},
+			customStyleshift: data.customStyleshift ?? [],
+		}).returning({ id: themes.id }).then(res => {
+			console.log('[db/createTheme] Insert successful, result:', res);
+			return res[0];
+		});
+		return result;
+	} catch (error) {
+		console.error('[db/createTheme] Insert failed:', error);
+		throw error;
+	}
 }
 
-export async function updateTheme(db: Database, id: string, ownerId: string, data: {
+export async function updateTheme(db: Database, env: Env, id: string, ownerId: string, data: {
 	name: string;
 	description?: string;
 	imgs?: string[];
@@ -112,7 +122,7 @@ export async function updateTheme(db: Database, id: string, ownerId: string, dat
 	if (data.pendingImages && Array.isArray(data.pendingImages)) {
 		for (const image of data.pendingImages) {
 			try {
-				const url = await uploadImageToR2(image.data, image.mimeType);
+				const url = await uploadImageToR2(env, image.data, image.mimeType);
 				uploadedUrls.push(url);
 			} catch (error) {
 				console.error('Error uploading theme image:', error);
@@ -124,12 +134,12 @@ export async function updateTheme(db: Database, id: string, ownerId: string, dat
 	let finalCoverImage = data.coverImage;
 	if (data.pendingCoverImage) {
 		try {
-			finalCoverImage = await uploadImageToR2(data.pendingCoverImage.data, data.pendingCoverImage.mimeType);
+			finalCoverImage = await uploadImageToR2(env, data.pendingCoverImage.data, data.pendingCoverImage.mimeType);
 			// Delete old cover image if it was on R2
 			if (existingTheme.coverImage && existingTheme.coverImage !== finalCoverImage) {
 				const r2Prefix = 'https://pub-'; // Adjust based on your R2 URL pattern if needed
 				if (existingTheme.coverImage.includes(r2Prefix)) {
-					await deleteImageFromR2(existingTheme.coverImage);
+					await deleteImageFromR2(env, existingTheme.coverImage);
 				}
 			}
 		} catch (error) {
@@ -139,7 +149,7 @@ export async function updateTheme(db: Database, id: string, ownerId: string, dat
 		// User explicitly removed cover image
 		const r2Prefix = 'https://pub-';
 		if (existingTheme.coverImage.includes(r2Prefix)) {
-			await deleteImageFromR2(existingTheme.coverImage);
+			await deleteImageFromR2(env, existingTheme.coverImage);
 		}
 	}
 
@@ -149,7 +159,7 @@ export async function updateTheme(db: Database, id: string, ownerId: string, dat
 	// Delete removed images from R2
 	for (const imageUrl of existingImages) {
 		if (!allImages.includes(imageUrl)) {
-			await deleteImageFromR2(imageUrl);
+			await deleteImageFromR2(env, imageUrl);
 		}
 	}
 
@@ -169,7 +179,7 @@ export async function updateTheme(db: Database, id: string, ownerId: string, dat
 	return result.meta.changes > 0;
 }
 
-export async function deleteTheme(db: Database, id: string, ownerId: string) {
+export async function deleteTheme(db: Database, env: Env, id: string, ownerId: string) {
 	// Get theme to delete its images
 	const theme = await db.query.themes.findFirst({
 		where: and(eq(themes.id, id), eq(themes.ownerId, ownerId)),
@@ -180,7 +190,7 @@ export async function deleteTheme(db: Database, id: string, ownerId: string) {
 
 		// Delete all images from R2
 		for (const imageUrl of images) {
-			await deleteImageFromR2(imageUrl);
+			await deleteImageFromR2(env, imageUrl);
 		}
 	}
 
