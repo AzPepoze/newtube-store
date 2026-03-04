@@ -5,7 +5,7 @@ export interface GoogleUser {
     picture: string;
 }
 
-export async function getGoogleAuthUrl(env: any, redirectUri: string) {
+export async function getGoogleAuthUrl(env: any, redirectUri: string, state?: string) {
     const params = new URLSearchParams({
         client_id: env.GOOGLE_CLIENT_ID,
         redirect_uri: redirectUri,
@@ -14,6 +14,7 @@ export async function getGoogleAuthUrl(env: any, redirectUri: string) {
         access_type: 'offline',
         prompt: 'consent',
     });
+    if (state) params.set('state', state);
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 

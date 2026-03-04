@@ -21,6 +21,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export function clearSessionId() {
 	document.cookie = 'sessionId=; Path=/; Max-Age=0';
+	document.cookie = 'userId=; Path=/; Max-Age=0';
 }
 
 export function requireAuth(customPath?: string): string {

@@ -8,7 +8,7 @@ import { contextPlugin } from '../plugins/context';
 
 export const authRoute = new Elysia({ prefix: '/auth' })
 	.use(contextPlugin)
-	.get('/google', async ({ request, redirect, env }) => {
+	.get('/google', async ({ query, request, redirect, env }) => {
 		const url = new URL(request.url);
 		let protocol = url.protocol;
 		if (!url.hostname.includes('localhost')) {
@@ -17,7 +17,7 @@ export const authRoute = new Elysia({ prefix: '/auth' })
 		const redirectUri = `${protocol}//${url.host}/auth/callback`;
 		console.log(`[Auth] Starting Google OAuth. Redirect URI: ${redirectUri}`);
 
-		const authUrl = await getGoogleAuthUrl(env, redirectUri);
+		const authUrl = await getGoogleAuthUrl(env, redirectUri, query.redirect as string);
 		return redirect(authUrl);
 	})
 	.get('/callback', async ({ request, query, redirect, set, cookie, env }) => {
@@ -54,7 +54,11 @@ export const authRoute = new Elysia({ prefix: '/auth' })
 
 			const frontendUrlStr = (env.FRONTEND_URL || 'http://localhost:5173').trim();
 			const urlObj = new URL(frontendUrlStr);
-			urlObj.pathname = '/discover';
+
+			// Use redirect from state or default to /discover
+			const targetPath = query.state || '/discover';
+			urlObj.pathname = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
+
 			urlObj.searchParams.set('sessionId', sessionId);
 			const redirectDest = urlObj.toString();
 
