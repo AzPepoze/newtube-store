@@ -7,6 +7,7 @@
 	import LockIcon from "$lib/icons/LockIcon.svelte";
 	import SaveIcon from "$lib/icons/SaveIcon.svelte";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
+	import { SUPPORTED_DOMAINS } from "$lib/constants";
 	import { extensionState, dispatchThemeInstallation, dispatchThemeSave } from "$lib/extension.svelte";
 
 	let { theme }: { theme: Theme } = $props();
@@ -47,7 +48,7 @@
 		e.stopPropagation();
 
 		if (extensionState.isExtensionReady) {
-			dispatchThemeInstallation(theme.id);
+			dispatchThemeInstallation(theme.id, theme.name, [...SUPPORTED_DOMAINS]);
 		}
 	}
 
@@ -56,7 +57,7 @@
 		e.stopPropagation();
 
 		if (extensionState.isExtensionReady) {
-			dispatchThemeSave(theme.id);
+			dispatchThemeSave(theme.name, theme.settings, SUPPORTED_DOMAINS[0]);
 			// You could add a local "saved" toasted state if you had a toast system
 		}
 	}

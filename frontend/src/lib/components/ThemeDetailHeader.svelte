@@ -7,6 +7,7 @@
 	import PlusIcon from "$lib/icons/PlusIcon.svelte";
 	import LockIcon from "$lib/icons/LockIcon.svelte";
 	import SaveIcon from "$lib/icons/SaveIcon.svelte";
+	import { SUPPORTED_DOMAINS } from "$lib/constants";
 	import { extensionState, dispatchThemeInstallation, dispatchThemeSave } from "$lib/extension.svelte";
 
 	interface ThemeDetail extends Theme {
@@ -37,13 +38,13 @@
 
 	function handleInstall() {
 		if (extensionState.isExtensionReady) {
-			dispatchThemeInstallation(theme.id);
+			dispatchThemeInstallation(theme.id, theme.name, [...SUPPORTED_DOMAINS]);
 		}
 	}
 
 	function handleSave() {
 		if (extensionState.isExtensionReady) {
-			dispatchThemeSave(theme.id);
+			dispatchThemeSave(theme.name, theme.settings, SUPPORTED_DOMAINS[0]);
 		}
 	}
 </script>

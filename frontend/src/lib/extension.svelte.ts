@@ -1,3 +1,5 @@
+import { EXTENSION_EVENTS } from "$lib/constants";
+
 export const extensionState = $state({
 	isExtensionReady: false,
 	installedThemeId: null as string | null
@@ -6,28 +8,31 @@ export const extensionState = $state({
 export function initializeExtensionListener() {
 	if (typeof window === "undefined") return;
 	
-	window.addEventListener("newtube_is_here", () => {
+	window.addEventListener(EXTENSION_EVENTS.READY, () => {
 		console.log("NewTube extension detected!");
 		extensionState.isExtensionReady = true;
-		
-		// Ask the extension which theme is installed
-		window.dispatchEvent(new CustomEvent("is_theme_installed"));
 	});
 
-	window.addEventListener("installed_theme", (e: Event) => {
-		const customEvent = e as CustomEvent;
-		if (customEvent.detail && customEvent.detail.themeId) {
+	window.addEventListener(EXTENSION_EVENTS.INSTALL_STATUS, (event: Event) => {
+		const customEvent = event as CustomEvent;
+		if (customEvent.detail && customEvent.detail.themeId && customEvent.detail.isInstalled) {
 			extensionState.installedThemeId = customEvent.detail.themeId;
+		} else if (customEvent.detail && !customEvent.detail.isInstalled) {
+			if (extensionState.installedThemeId === customEvent.detail.themeId) {
+				extensionState.installedThemeId = null;
+			}
 		}
 	});
 }
 
-export function dispatchThemeInstallation(themeId: string) {
+export function dispatchThemeInstallation(themeId: string, themeName: string, targetDomains: string[]) {
 	if (typeof window === "undefined") return;
 	
-	const event = new CustomEvent("install_newtube_theme", {
+	const event = new CustomEvent(EXTENSION_EVENTS.INSTALL, {
 		detail: {
-			themeId
+			themeId,
+			themeName,
+			targetDomains
 		}
 	});
 	window.dispatchEvent(event);
@@ -35,12 +40,26 @@ export function dispatchThemeInstallation(themeId: string) {
 	extensionState.installedThemeId = themeId;
 }
 
-export function dispatchThemeSave(themeId: string) {
+export function dispatchThemeSave(themeName: string, themeData: any, targetDomain: string) {
 	if (typeof window === "undefined") return;
 	
-	const event = new CustomEvent("save_newtube_theme", {
+	const event = new CustomEvent(EXTENSION_EVENTS.SAVE, {
 		detail: {
-			themeId
+			themeName,
+			themeData,
+			targetDomain
+		}
+	});
+	window.dispatchEvent(event);
+}
+
+export function dispatchCheckThemeInstallation(themeId: string, targetDomain: string) {
+	if (typeof window === "undefined") return;
+
+	const event = new CustomEvent(EXTENSION_EVENTS.CHECK_INSTALL, {
+		detail: {
+			themeId,
+			targetDomain
 		}
 	});
 	window.dispatchEvent(event);
