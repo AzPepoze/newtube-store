@@ -14,6 +14,9 @@ const config = {
 		alias: {
 			shared: "../shared",
 		},
+		prerender: {
+			handleUnseenRoutes: "ignore",
+		},
 	},
 };
 
