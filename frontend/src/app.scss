@@ -9,7 +9,8 @@
 
 	// Dark Mode (Default)
 	--bg-dark: #101010;
-	--bg-glass: rgb(30, 30, 30);
+	--bg-dark-rgb: 16, 16, 16;
+	--bg-glass: rgba(30, 30, 30, 0.7);
 	--border-glass: rgba(255, 255, 255, 0.1);
 	--text-primary: #ffffff;
 	--text-primary-rgb: 255, 255, 255;
@@ -25,6 +26,7 @@
 	--secondary-glow: #666666;
 	--accent-glow: #000000;
 	--bg-dark: #ffffff;
+	--bg-dark-rgb: 255, 255, 255;
 	--bg-glass: rgba(255, 255, 255, 0.7);
 	--border-glass: rgba(0, 0, 0, 0.08);
 	--text-primary: #000000;
@@ -43,6 +45,7 @@ body {
 		linear-gradient(var(--grid-color) 1px, transparent 1px),
 		linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
 	background-size: var(--grid-size) var(--grid-size);
+	background-attachment: fixed;
 	color: var(--text-primary);
 	font-family:
 		"Inter",

@@ -4,7 +4,12 @@ import { PUBLIC_API_URL } from './constants';
 export function getSessionId(): string {
 	if (typeof document === 'undefined') return '';
 	const match = document.cookie.match(/(?:^|;\s*)sessionId=([^;]*)/);
-	return match ? decodeURIComponent(match[1]) : '';
+	if (match) return decodeURIComponent(match[1]);
+
+	// If sessionId is httpOnly, we can't read it, but we can check for userId
+	// which is set alongside sessionId on the same login event.
+	const userMatch = document.cookie.match(/(?:^|;\s*)userId=([^;]*)/);
+	return userMatch ? decodeURIComponent(userMatch[1]) : '';
 }
 
 export async function getCurrentUser(): Promise<User | null> {

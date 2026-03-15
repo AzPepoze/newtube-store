@@ -121,21 +121,13 @@
 					<a href="/" aria-label="Home" title="Home">
 						<HomeIcon size={24} />
 					</a>
-					<a
-						href="/discover"
-						aria-label="Discover"
-						title="Discover"
-					>
+					<a href="/discover" aria-label="Discover" title="Discover">
 						<CompassIcon size={24} />
 					</a>
 					<a href="/terms" aria-label="Terms" title="Terms">
 						<ScaleIcon size={24} />
 					</a>
-					<a
-						href="/privacy"
-						aria-label="Privacy"
-						title="Privacy"
-					>
+					<a href="/privacy" aria-label="Privacy" title="Privacy">
 						<ShieldIcon size={24} />
 					</a>
 				</div>
@@ -180,12 +172,8 @@
 											class="avatar"
 										/>
 									{:else}
-										<div
-											class="avatar avatar-fallback"
-										>
-											{currentUser?.name.charAt(
-												0,
-											)}
+										<div class="avatar avatar-fallback">
+											{currentUser?.name.charAt(0)}
 										</div>
 									{/if}
 									<span class="chevron">▾</span>
@@ -236,7 +224,7 @@
 	.app-container {
 		min-height: 100vh;
 		padding: 1.5rem 2rem;
-		max-width: 1400px;
+		width: 100%;
 		margin: 0 auto;
 	}
 
@@ -410,14 +398,7 @@
 	main {
 		animation: contentFade 0.6s ease-out;
 		flex: 1;
-		position: relative;
-
-		:global(> *) {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-		}
+		width: 100%;
 	}
 
 	@keyframes contentFade {

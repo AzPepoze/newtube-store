@@ -5,6 +5,7 @@ import { authRoute } from './routes/auth';
 import { themeRoute } from './routes/themes';
 import { userRoute } from './routes/users';
 import { imageRoute } from './routes/images';
+import { sponsorsRoute } from './routes/sponsors';
 
 const app = new Elysia({ adapter: CloudflareAdapter })
 	.use(cors({
@@ -16,6 +17,7 @@ const app = new Elysia({ adapter: CloudflareAdapter })
 	.use(themeRoute)
 	.use(userRoute)
 	.use(imageRoute)
+	.use(sponsorsRoute)
 	.onError(({ code, error, set }) => {
 		console.error(`Error (${code}):`, error);
 
